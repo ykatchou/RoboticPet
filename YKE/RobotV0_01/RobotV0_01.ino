@@ -1,3 +1,11 @@
+
+/****
+*
+* Ce robot affiche simplement un nombre de barres dans l'afficheur LED correspondant à la distance détecté en ultrason.
+*
+*****/
+
+
 /**********************************************************/
 /*              INPUT MATCHING */
 /**********************************************************/

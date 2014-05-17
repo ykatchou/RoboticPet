@@ -30,6 +30,7 @@ void setup() {
   logline("Wait for GO (g): ");
 }
 
+
 void loop()
 {
   byte input= Serial.read();
