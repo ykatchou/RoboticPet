@@ -7,12 +7,13 @@
 /**
  * Permet de configurer en une ligne un moteur.
  */
-void configure(Motor* motor, int id, int isactive, int pinenable, int pinfwd, int pinrev){
+void configure(Motor* motor, int id, int isactive, int position,int pinenable, int pinfwd, int pinrev){
   motor->iId = id;
   motor->iIsActive = isactive;
   motor->iPinEnable = pinenable;
   motor->iPinFwd = pinfwd;
   motor->iPinRev = pinrev;
+  motor->iPosition = position;
 }
 
 /**
@@ -113,7 +114,7 @@ void moveMany(Motor motorArray[], int motorArrayLength, ulong idelayms, int idir
  * idelayms : nombre de MILLI secondes dans un sens
  * value : si 1 : FWD, si 2 : REV
  */
-void rotateMany(Motor motorArray[],int motorLenghtTotal,int motorLEFT[], int motorLengthLEFT,int motorRIGHT[], int motorLengthRIGHT, int iAngle)
+void rotateMany(Motor motorArray[],int motorLenghtTotal, int iAngle)
 {
   int i=0;
 
@@ -121,12 +122,12 @@ void rotateMany(Motor motorArray[],int motorLenghtTotal,int motorLEFT[], int mot
   //vitesse angulaire en ms/0°
   int angularspeed = 10;  
   int idelayms = 0;
-  int DirectionL=MOTOR_FWD;
-  int DirectionR=MOTOR_REV;
+  int DirectionL=MOTOR_DIRECTION_FWD;
+  int DirectionR=MOTOR_DIRECTION_REV;
 
   if(iAngle<0){
-    DirectionL=MOTOR_REV;
-    DirectionR=MOTOR_FWD;
+    DirectionL=MOTOR_DIRECTION_REV;
+    DirectionR=MOTOR_DIRECTION_FWD;
   }
   idelayms = abs(int(angularspeed * iAngle));
   char buffer[80];
@@ -147,14 +148,20 @@ void rotateMany(Motor motorArray[],int motorLenghtTotal,int motorLEFT[], int mot
   else{
 
     //TURN!!!
-    for(i=0; i<motorLengthLEFT; i++){
-      Motor* pmotor = &(motorArray[ motorLEFT[i] ]);
-      toggle_motor(pmotor, DirectionL,true);
+    for(i=0; i<motorLenghtTotal; i++){
+      Motor* pmotor = &(motorArray[i]);
+      switch(pmotor->iPosition){
+      case MOTOR_POSITION_L:
+        toggle_motor(pmotor, DirectionL,true);
+        break;
+      case MOTOR_POSITION_R:
+        toggle_motor(pmotor, DirectionR,true);
+        break;
+      default:
+        break;
+      }
     }
-    for(i=0; i<motorLengthRIGHT; i++){
-      Motor* pmotor = &(motorArray[ motorRIGHT[i] ]);
-      toggle_motor(pmotor, DirectionR,true);
-    }
+
     //END TURN!!!
     delay(idelayms);
     logline("fin turn motor");
@@ -174,16 +181,18 @@ void rotateMany(Motor motorArray[],int motorLenghtTotal,int motorLEFT[], int mot
 Motor motors[4];
 
 void setup() {
+
+  delay(1000);
   logline("---- Initialize ----");
   Motor* Front_L= &(motors[0]);
   Motor* Front_R= &(motors[1]);
   Motor* Back_L= &(motors[2]);
   Motor* Back_R= &(motors[3]);
 
-  configure(Front_L, 0x0010, 0, 0, 7, 6);
-  configure(Front_R, 0x0011, 0, 0, 3, 2);
-  configure(Back_L, 0x0012, 0, 0, 9, 8);
-  configure(Back_R, 0x0013, 0, 0, 5, 4);
+  configure(Front_L, 0x0010, 0, MOTOR_POSITION_L ,0, 7, 6);
+  configure(Front_R, 0x0011, 0, MOTOR_POSITION_R,0, 3, 2);
+  configure(Back_L, 0x0012,  0, MOTOR_POSITION_L, 0, 9, 8);
+  configure(Back_R, 0x0013,  0, MOTOR_POSITION_R, 0, 5, 4);
 
   init_motor(Front_L);
   init_motor(Front_R);
@@ -195,31 +204,43 @@ void setup() {
     Serial.begin(9600);
   }
 
-  delay(2500);
-
-  //moveOne(Front_L,300, MOTOR_FWD);
-  //moveOne(Front_R,300, MOTOR_FWD);
-  //moveOne(Back_L,300, MOTOR_FWD);
-  //moveOne(Back_R,300, MOTOR_FWD);
-
-  //moveMany(motors, 4, 2000, MOTOR_FWD);
-
-  int motorsLindex[2]={
-    0,2          };
-  int motorsRindex[2]={
-    1,3          };
-
-  rotateMany(motors, 4, motorsLindex,2, motorsRindex, 2,90);
-  //  delay(1000);
-  rotateMany(motors, 4, motorsLindex,2, motorsRindex, 2,-90);
-
+  delay(3000);
   logline("---- Initialize OK ----");
+  
+  logline("Wait for GO (g): ");
 }
 
 void loop()
 {
-  // stop();
+ byte input= Serial.read();
+ if(input == 'g'){
+  logline("Go !");
+
+  //moveOne(Front_L,300, MOTOR_DIRECTION_FWD);
+  //moveOne(Front_R,300, MOTOR_DIRECTION_FWD);
+  //moveOne(Back_L,300, MOTOR_DIRECTION_FWD);
+  //moveOne(Back_R,300, MOTOR_DIRECTION_FWD);
+
+  //moveMany(motors, 4, 2000, MOTOR_DIRECTION_FWD);
+
+  int motorsLindex[2]={
+    0,2                };
+  int motorsRindex[2]={
+    1,3                };
+
+  rotateMany(motors, 4, 90);
+  delay(100);
+  rotateMany(motors, 4, -90);
+  delay(100);
+  
+  logline("done.");
+ }else{
+   delay(1000);
+ }
 }
+
+
+
 
 
 

@@ -12,11 +12,18 @@ typedef struct{
   int iPinEnable;
   int iPinFwd;
   int iPinRev;
+  
+  //0 : N/A, 1 : Left, 2 : Right
+  int iPosition;
 } 
 Motor;
 
-int MOTOR_FWD=1;
-int MOTOR_REV=2;
+const int MOTOR_DIRECTION_FWD=1;
+const int MOTOR_DIRECTION_REV=2;
+
+const int MOTOR_POSITION_NONE=0;
+const int MOTOR_POSITION_L=1;
+const int MOTOR_POSITION_R=2;
 
 #endif
 
