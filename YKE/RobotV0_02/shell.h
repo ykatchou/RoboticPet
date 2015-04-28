@@ -7,7 +7,7 @@
 /**
 * Configure le shell.
 */
-shell_configure(){
+void shell_configure(){
 }
 
 #endif
