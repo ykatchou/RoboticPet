@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+//#define DEBUG
+
 /***************************************************
  * Structures
  ****************************************************/
@@ -63,7 +65,7 @@ int hydrometric_dumpsignal(Hydrometric* hydro, byte* aRawBuffer){
     iResult=1;
   }
   else{
-    sprintf(logbuffer, "Hydrometric [%i] : Start ERROR : Capteur non present ?",hydro->iId);
+    sprintf(logbuffer, "Hydrometric [%i] : Start ERROR : Capteur non present en %i",hydro->iId, hydro->iPinData);
     logline(logbuffer);
     iResult=0;
   }
@@ -91,9 +93,9 @@ uint hydrometric_convert(byte* aBuffer, int iStartIndex, int iCount, int iDebug)
   int iIndex;
   char logbuffer[20];
 
-  if(iDebug==1){
+#ifdef DEBUG
     log("Convert : ");
-  }
+#endif
 
   //Big endian.
   if(iCount>=0 && iStartIndex>=0){
@@ -103,10 +105,11 @@ uint hydrometric_convert(byte* aBuffer, int iStartIndex, int iCount, int iDebug)
       bOut = bOut<<1;
       bOut= bOut + aBuffer[iIndex];
 
-      if(iDebug==1){
-        sprintf(logbuffer, "%i",aBuffer[iIndex]);
-        log(logbuffer);
-      }
+#ifdef DEBUG
+      sprintf(logbuffer, "%i",aBuffer[iIndex]);
+      log(logbuffer);
+#endif
+
       iIndex++;
     }
   }
@@ -118,20 +121,20 @@ uint hydrometric_convert(byte* aBuffer, int iStartIndex, int iCount, int iDebug)
       bOut = bOut<<1;
       bOut= bOut + aBuffer[iIndex];
 
-      if(iDebug==1){
+#ifdef DEBUG
         sprintf(logbuffer, "%i",aBuffer[iIndex]);
         log(logbuffer);
-      }
+#endif
       iIndex--;
     }
   }
 
 
-  if(iDebug==1){
+#ifdef DEBUG
     sprintf(logbuffer, " => %i",bOut);
     logline(logbuffer);
+#endif
 
-  }
   return bOut;
 }
 
@@ -176,8 +179,8 @@ int hydrometric_measure(Hydrometric* hydro){
   }
 
   if(iResult == 1){ 
-
-    //LOG RECAP
+    
+#ifdef DEBUG
     int i;
     for(i=0; i<BUFFERSIZE;i++){
       sprintf(logbuffer, "%i",aBitBuffer[i]);
@@ -189,8 +192,10 @@ int hydrometric_measure(Hydrometric* hydro){
         logline("");      
       }
     }
-    hydro->iHydrometry=hydrometric_convert(aBitBuffer,0,8,0);
-    hydro->iTemperature=hydrometric_convert(aBitBuffer,15,8,1); 
+#endif
+
+    hydro->iHydrometry=hydrometric_convert(aBitBuffer,0,8,1);
+    hydro->iTemperature=hydrometric_convert(aBitBuffer,16,8,1); 
 
     //hydro->iHydrometry = map(hydro->iHydrometry, 0,255, 20,90);
     //hydro->iTemperature = map(hydro->iTemperature, 0,255, 0,50);
@@ -243,6 +248,7 @@ int hydrometric_GetHydrometry(Hydrometric* hydro){
 }
 
 #endif
+
 
 
 
