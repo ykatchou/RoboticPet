@@ -16,8 +16,8 @@ typedef struct{
   int iPinData;
 
   int iMeasureIsOK;
-  float fTemperature;
-  float fHydrometry;
+  int iTemperature;
+  int iHydrometry;
 } 
 Hydrometric;
 
@@ -34,8 +34,8 @@ void hydrometric_configure(Hydrometric* hydro,int id, int pindata){
   hydro->iPinData = pindata;
 
   hydro->iMeasureIsOK = 0;
-  hydro->fTemperature = 0.0;
-  hydro->fHydrometry = 0.0;
+  hydro->iTemperature = 0.0;
+  hydro->iHydrometry = 0.0;
 
   hydro->iIsActive = 1;
 }
@@ -63,7 +63,7 @@ int hydrometric_dumpsignal(Hydrometric* hydro, byte* aRawBuffer){
     iResult=1;
   }
   else{
-    sprintf(logbuffer, "Hydrometric [%i] : Start ERROR : Capteur non présent ?",hydro->iId);
+    sprintf(logbuffer, "Hydrometric [%i] : Start ERROR : Capteur non present ?",hydro->iId);
     logline(logbuffer);
     iResult=0;
   }
@@ -86,25 +86,51 @@ int hydrometric_dumpsignal(Hydrometric* hydro, byte* aRawBuffer){
   return iResult;
 }
 
-byte hydrometric_convert(byte* aBuffer, int iStartIndex, int iCount){
-  byte bOut=0;
-  int iIndex=iStartIndex;
+int hydrometric_convert(byte* aBuffer, int iStartIndex, int iCount, int iDebug){
+  int bOut=0;
+  int iIndex;
+  char logbuffer[20];
 
-  char logbuffer[80];
+  if(iDebug==1){
+    log("Convert : ");
+  }
 
-  if(iCount>=0){
-    while(iIndex<iStartIndex + iCount){
+  //Big endian.
+  if(iCount>=0 && iStartIndex>=0){
+    iIndex=iStartIndex;
+    while(iIndex < iStartIndex + iCount){
+
       bOut = bOut<<1;
       bOut= bOut + aBuffer[iIndex];
+
+      if(iDebug==1){
+        sprintf(logbuffer, "%i",aBuffer[iIndex]);
+        log(logbuffer);
+      }
       iIndex++;
     }
   }
-  else{
-    while(iIndex>iStartIndex + iCount){
+  //Little endian
+  else if(iCount<0 && iStartIndex>=0){
+    iIndex=iStartIndex - iCount;
+    while(iIndex > iStartIndex){
+
       bOut = bOut<<1;
       bOut= bOut + aBuffer[iIndex];
+
+      if(iDebug==1){
+        sprintf(logbuffer, "%i",aBuffer[iIndex]);
+        log(logbuffer);
+      }
       iIndex--;
     }
+  }
+
+
+  if(iDebug==1){
+    sprintf(logbuffer, " => %i",bOut);
+    logline(logbuffer);
+
   }
   return bOut;
 }
@@ -133,7 +159,7 @@ int hydrometric_measure(Hydrometric* hydro){
     //Fin = 50us LOW
     //TOTAL : 40bit of data (4mS)
     //Data = 8bit integral RH data + 8bit decimal RH data + 8bit integral T data + 8bit decimal T data + 8bit check-sum.
-    if(duration > 15 && duration < 35){
+    if(duration >= 15 && duration < 35){
       aBitBuffer[iRawBufferIndex] = 1;
     }
     else if(duration >60 && duration < 80){
@@ -148,55 +174,92 @@ int hydrometric_measure(Hydrometric* hydro){
     iRawBufferIndex++;
   }
 
-  hydro->iMeasureIsOK = iResult;
-
   if(iResult == 1){ 
-    //for(iRawBufferIndex=0;iRawBufferIndex<BUFFERSIZE;iRawBufferIndex++){
-    //  sprintf(logbuffer, "Hydrometric [%i] : Buffer[%i] : %i",hydro->iId ,iRawBufferIndex, aBitBuffer[iRawBufferIndex]);
-    //  logline(logbuffer);  
-    //}
 
-    hydro->fHydrometry=hydrometric_convert(aBitBuffer,0,8);
-    hydro->fTemperature=hydrometric_convert(aBitBuffer,16,8);   
+    //LOG RECAP
+    int i;
+    for(i=0; i<BUFFERSIZE;i++){
+      sprintf(logbuffer, "%i",aBitBuffer[i]);
+      log(logbuffer);
+      if((i+1)%4==0 && i>0){
+        log(" ");
+      }
+      if((i+1)%8==0 && i>0){        
+        logline("");      
+      }
+    }
+    logline("");
 
-    hydro->fTemperature = map(hydro->fTemperature, 0,255, 0,50) / 10.0;
-    hydro->fHydrometry = map(hydro->fHydrometry, 0,255, 20,90) / 10.0;
+    logline("hydro");
+    hydro->iHydrometry=hydrometric_convert(aBitBuffer,0,8,0);
+    logline("thermo");
+    hydro->iTemperature=hydrometric_convert(aBitBuffer,15,-8,1);   
 
-    sprintf(logbuffer, "Hydrometric [%i] : Temperature : %i, Hydrometry  : %i",hydro->iId ,hydro->fTemperature, hydro->fHydrometry);
+    hydro->iHydrometry = map(hydro->iHydrometry, 0,255, 20,90);
+    hydro->iTemperature = map(hydro->iTemperature, 0,255, 0,50);
+
+    hydro->iMeasureIsOK=1;
   }
   else{
-    sprintf(logbuffer, "Hydrometric [%i] : Mesured failed",hydro->iId);
+    hydro->iHydrometry=0;
+    hydro->iTemperature=0;
+    hydro->iMeasureIsOK=0;
   }
-  logline(logbuffer);  
+
+  if(hydro->iMeasureIsOK == 1){
+    sprintf(logbuffer, "Hydrometric [%i] : OK : Temperature : %i, Hydrometry  : %i",hydro->iId ,hydro->iTemperature, hydro->iHydrometry);
+    logline(logbuffer);  
+  }
+  else{
+    sprintf(logbuffer, "Hydrometric [%i] : NOK : Mesured failed",hydro->iId);
+    logline(logbuffer);  
+  }
 
   return iResult;
 }
 
-int hydrometric_MesureOk(Hydrometric* hydro){
+//Retourne 1 si la mesure est OK, 0 sinon.
+int hydrometric_IsMesureOk(Hydrometric* hydro){
   return hydro->iMeasureIsOK;
 }
 
-float hydrometric_Temperature(Hydrometric* hydro){
-  float fOut = -1;
+//Retourne la temperature (x10) en celsius si la mesure est OK, sinon -1.
+int hydrometric_GetTemperature(Hydrometric* hydro){
+  int iOut = -1;
   if(hydro->iMeasureIsOK == 1)
   {
-    fOut = hydro->fTemperature;
+    iOut = hydro->iTemperature;
   }
-  
-  return fOut;
+
+  return iOut;
 }
 
-float hydrometric_Hydrometry(Hydrometric* hydro){
-  float fOut = -1;
+//Retourne l'hydrometrie (en %) si la mesure est OK, sinon -1.
+int hydrometric_GetHydrometry(Hydrometric* hydro){
+  int iOut = -1;
   if(hydro->iMeasureIsOK == 1)
   {
-    fOut = hydro->fHydrometry;
+    iOut = hydro->iHydrometry;
   }
-  
-  return fOut;
+
+  return iOut;
 }
 
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
