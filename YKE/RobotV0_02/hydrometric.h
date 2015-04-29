@@ -94,10 +94,9 @@ uint hydrometric_convert(byte* aBuffer, int iStartIndex, int iCount, int iDebug)
   char logbuffer[20];
 
 #ifdef DEBUG
-    log("Convert : ");
+  log("Convert : ");
 #endif
 
-  //Big endian.
   if(iCount>=0 && iStartIndex>=0){
     iIndex=iStartIndex;
     while(iIndex < iStartIndex + iCount){
@@ -113,26 +112,10 @@ uint hydrometric_convert(byte* aBuffer, int iStartIndex, int iCount, int iDebug)
       iIndex++;
     }
   }
-  //Little endian
-  else if(iCount<0 && iStartIndex>=0){
-    iIndex=iStartIndex - iCount;
-    while(iIndex > iStartIndex){
-
-      bOut = bOut<<1;
-      bOut= bOut + aBuffer[iIndex];
 
 #ifdef DEBUG
-        sprintf(logbuffer, "%i",aBuffer[iIndex]);
-        log(logbuffer);
-#endif
-      iIndex--;
-    }
-  }
-
-
-#ifdef DEBUG
-    sprintf(logbuffer, " => %i",bOut);
-    logline(logbuffer);
+  sprintf(logbuffer, " => %i",bOut);
+  logline(logbuffer);
 #endif
 
   return bOut;
@@ -142,6 +125,7 @@ uint hydrometric_convert(byte* aBuffer, int iStartIndex, int iCount, int iDebug)
 int hydrometric_measure(Hydrometric* hydro){
   int iResult=0;
   char logbuffer[80];
+  byte checksum;
 
   int iRawBufferIndex=0;
   byte aRawBuffer[BUFFERSIZE];
@@ -150,7 +134,7 @@ int hydrometric_measure(Hydrometric* hydro){
   //Retrieve the signal.
   iResult = hydrometric_dumpsignal(hydro, aRawBuffer);
 
-  //Analyse du signal :
+  //Conversion du signal :
   iRawBufferIndex=0;
   while(iRawBufferIndex<BUFFERSIZE && iResult==1){
     int duration = aRawBuffer[iRawBufferIndex];
@@ -178,8 +162,8 @@ int hydrometric_measure(Hydrometric* hydro){
     iRawBufferIndex++;
   }
 
+  //Analyse du signal
   if(iResult == 1){ 
-    
 #ifdef DEBUG
     int i;
     for(i=0; i<BUFFERSIZE;i++){
@@ -197,10 +181,17 @@ int hydrometric_measure(Hydrometric* hydro){
     hydro->iHydrometry=hydrometric_convert(aBitBuffer,0,8,1);
     hydro->iTemperature=hydrometric_convert(aBitBuffer,16,8,1); 
 
-    //hydro->iHydrometry = map(hydro->iHydrometry, 0,255, 20,90);
-    //hydro->iTemperature = map(hydro->iTemperature, 0,255, 0,50);
-
-    hydro->iMeasureIsOK=1;
+    //Vérification Checksum.
+    checksum = hydrometric_convert(aBitBuffer,32,8,1);
+    if(checksum != (byte)hydro->iHydrometry + (byte)hydro->iTemperature){
+      sprintf(logbuffer, "Hydrometric [%i] : NOK : Checksum failed (%i)",hydro->iId, checksum);
+      logline(logbuffer);  
+      iResult=0;
+      hydro->iMeasureIsOK=0;
+    }
+    else{
+      hydro->iMeasureIsOK=1;
+    }
   }
   else{
     hydro->iHydrometry=0;
@@ -248,39 +239,5 @@ int hydrometric_GetHydrometry(Hydrometric* hydro){
 }
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
