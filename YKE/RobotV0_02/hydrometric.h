@@ -24,7 +24,7 @@ Hydrometric;
 /***************************************************
  * Constantes
  ****************************************************/
-#define BUFFERSIZE 34
+#define BUFFERSIZE 40
 
 /***************************************************
  * Fonctions
@@ -42,12 +42,18 @@ void hydrometric_configure(Hydrometric* hydro,int id, int pindata){
 
 }
 
+int hydrometric_dumpsignal(Hydrometric* hydro, char* aRawBuffer){
+}
+
 //Retourne 1 si la mesure est OK, 0 sinon.
 int hydrometric_measure(Hydrometric* hydro){
   int iResult=0;
-
   char logbuffer[80];
-
+  
+  int iRawBufferIndex=0;
+  char aRawBuffer[BUFFERSIZE];
+  int aDurationBuffer[BUFFERSIZE];
+  
   //On envoie la commande START au capteur :
   //envoyer LOW pendant au moins 18ms puis HIGH pendant 40us
   pinMode(hydro->iPinData, OUTPUT); 
@@ -59,15 +65,10 @@ int hydrometric_measure(Hydrometric* hydro){
 
   //On regarde si le capteur à bien reçu le start : 
   pinMode(hydro->iPinData, INPUT); 
-  int iRawBufferIndex=0;
-  char aRawBuffer[BUFFERSIZE];
-  int aDurationBuffer[BUFFERSIZE];
 
   //Puis reception  LOW 80us puis HIGH 80us
   int iStart=  pulseIn(hydro->iPinData, HIGH);
   if(iStart>60){
-    sprintf(logbuffer, "Hydrometric [%i] : Start OK",hydro->iId);
-    logline(logbuffer);
     iResult=1;
   }
   else{
@@ -85,7 +86,7 @@ int hydrometric_measure(Hydrometric* hydro){
 
   //Pour des questions de performances, on fait d'abord un dump du signal.
   iRawBufferIndex=0;
-  while(iRawBufferIndex<BUFFERSIZE){
+  while(iRawBufferIndex<BUFFERSIZE && iResult==1){
     int duration = pulseIn(hydro->iPinData, HIGH,200); 
     aDurationBuffer[iRawBufferIndex] = duration;
     iRawBufferIndex++;
@@ -107,22 +108,18 @@ int hydrometric_measure(Hydrometric* hydro){
       aRawBuffer[iRawBufferIndex] = -1;
       iResult=0;
     }
-
-    sprintf(logbuffer, "Hydrometric [%i] : Buffer[%i] : %i",hydro->iId ,iRawBufferIndex, aRawBuffer[iRawBufferIndex]);
-    logline(logbuffer);
-
     iRawBufferIndex++;
   }
 
   if(iResult == 1){ 
     for(iRawBufferIndex=0;iRawBufferIndex<BUFFERSIZE;iRawBufferIndex++){
-      sprintf(logbuffer, "Hydrometric [%i] : RawBuffer[%i] : %i",hydro->iId ,iRawBufferIndex, aRawBuffer[iRawBufferIndex]);
-      //logline(logbuffer);  
+      sprintf(logbuffer, "Hydrometric [%i] : Buffer[%i] : %i",hydro->iId ,iRawBufferIndex, aRawBuffer[iRawBufferIndex]);
+      logline(logbuffer);  
     }
     sprintf(logbuffer, "Hydrometric [%i] : Temperature : %d, Hydrometry  : %d",hydro->iId ,hydro->fTemperature, hydro->fHydrometry);
   }
   else{
-    sprintf(logbuffer, "Hydrometric [%i] : Mesured failed",hydro->iId ,hydro->fTemperature, hydro->fHydrometry);
+    sprintf(logbuffer, "Hydrometric [%i] : Mesured failed",hydro->iId);
   }
   logline(logbuffer);  
 
