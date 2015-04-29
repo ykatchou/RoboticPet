@@ -34,8 +34,10 @@ void setup() {
 
 void loop() {  
   delay(3000);
-    hydrometric_measure(&hydro);
+  hydrometric_measure(&hydro);
+  delay(7000);
 }
+
 
 
 
