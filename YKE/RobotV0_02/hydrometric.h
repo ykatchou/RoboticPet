@@ -16,8 +16,8 @@ typedef struct{
   int iPinData;
 
   int iMeasureIsOK;
-  int iTemperature;
-  int iHydrometry;
+  uint iTemperature;
+  uint iHydrometry;
 } 
 Hydrometric;
 
@@ -86,8 +86,8 @@ int hydrometric_dumpsignal(Hydrometric* hydro, byte* aRawBuffer){
   return iResult;
 }
 
-int hydrometric_convert(byte* aBuffer, int iStartIndex, int iCount, int iDebug){
-  int bOut=0;
+uint hydrometric_convert(byte* aBuffer, int iStartIndex, int iCount, int iDebug){
+  uint bOut=0;
   int iIndex;
   char logbuffer[20];
 
@@ -156,14 +156,15 @@ int hydrometric_measure(Hydrometric* hydro){
     //Data : Pour chaque bit de données : 50us LOW puis
     //  1 = HIGH durant 27us
     //  0 = HIGH durant 70us
+    // ===========> Il semble y avoir une erreur dans la DOC !! 1 >60us et 0 <40us !!!
     //Fin = 50us LOW
     //TOTAL : 40bit of data (4mS)
     //Data = 8bit integral RH data + 8bit decimal RH data + 8bit integral T data + 8bit decimal T data + 8bit check-sum.
     if(duration >= 15 && duration < 35){
-      aBitBuffer[iRawBufferIndex] = 1;
+      aBitBuffer[iRawBufferIndex] = 0;
     }
     else if(duration >60 && duration < 80){
-      aBitBuffer[iRawBufferIndex] = 0;
+      aBitBuffer[iRawBufferIndex] = 1;
     }
     else{     
       aBitBuffer[iRawBufferIndex] =0;
@@ -188,15 +189,11 @@ int hydrometric_measure(Hydrometric* hydro){
         logline("");      
       }
     }
-    logline("");
-
-    logline("hydro");
     hydro->iHydrometry=hydrometric_convert(aBitBuffer,0,8,0);
-    logline("thermo");
-    hydro->iTemperature=hydrometric_convert(aBitBuffer,15,-8,1);   
+    hydro->iTemperature=hydrometric_convert(aBitBuffer,15,8,1); 
 
-    hydro->iHydrometry = map(hydro->iHydrometry, 0,255, 20,90);
-    hydro->iTemperature = map(hydro->iTemperature, 0,255, 0,50);
+    //hydro->iHydrometry = map(hydro->iHydrometry, 0,255, 20,90);
+    //hydro->iTemperature = map(hydro->iTemperature, 0,255, 0,50);
 
     hydro->iMeasureIsOK=1;
   }
