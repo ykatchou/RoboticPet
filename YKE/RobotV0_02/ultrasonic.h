@@ -8,7 +8,7 @@
  ****************************************************/
 
 /**
- * Definit les infos nécessaires à un moteur.
+ * Definit les infos nécessaires à un capteur ultrason.
  */
 typedef struct{
   uint Id;
