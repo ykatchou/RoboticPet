@@ -11,7 +11,7 @@
  * Definit les infos nécessaires à un moteur.
  */
 typedef struct{
-  int iId;
+  uint iId;
   int iIsActive;
   int iPinEnable;
   int iPinFwd;
@@ -57,7 +57,7 @@ void motor_stop (Motor* motor, boolean bStayActive){
 /**
  * Permet de configurer en une ligne un moteur.
  */
-void motor_configure(Motor* motor, int id, int isactive, int position,int pinenable, int pinfwd, int pinrev){
+void motor_configure(Motor* motor, uint id, int isactive, int position,int pinenable, int pinfwd, int pinrev){
   motor->iId = id;
   motor->iIsActive = isactive;
   motor->iPinEnable = pinenable;

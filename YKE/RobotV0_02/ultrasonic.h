@@ -11,7 +11,7 @@
  * Definit les infos nécessaires à un moteur.
  */
 typedef struct{
-  int iId;
+  uint Id;
   int iIsActive;
   int iPinTrigger;
   int iPinEcho;
@@ -25,8 +25,8 @@ Ultrasonic;
 /***************************************************
  * Fonctions
  ****************************************************/
-void ultrasonic_configure(Ultrasonic* sonic,int id, int pintrigger, int pinecho){
-  sonic->iId = id;
+void ultrasonic_configure(Ultrasonic* sonic, uint id, int pintrigger, int pinecho){
+  sonic->Id = id;
   sonic->iPinTrigger = pintrigger;
   sonic->iPinEcho = pinecho;
 
