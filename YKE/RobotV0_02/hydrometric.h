@@ -13,7 +13,7 @@
  * Definit les infos nécessaires à un capteur hydrometric (DHT11 Sensor 140C03).
  */
 typedef struct{
-  int iId;
+  uint iId;
   int iIsActive;
   int iPinData;
 
@@ -31,7 +31,7 @@ Hydrometric;
 /***************************************************
  * Fonctions
  ****************************************************/
-void hydrometric_configure(Hydrometric* hydro,int id, int pindata){
+void hydrometric_configure(Hydrometric* hydro,uint id, int pindata){
   hydro->iId = id;
   hydro->iPinData = pindata;
 
