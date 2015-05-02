@@ -40,16 +40,6 @@ Device* device_configure(Device* device, uint id,uint type, void* pdevice, char*
   return device;
 }
 
-uint device_rawid(Device* device){
-  uint o_id=0xFFFF;
-  
-  //if(device!=null && device.pDevice !=null){
-    o_id= *(device->pDevice+);
-  //}
-  
-  return o_id;
-}
-
 #endif
 
 

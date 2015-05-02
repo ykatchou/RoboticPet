@@ -20,13 +20,12 @@ Motor motors[4];
 
 void setup() {
   log_init();
-
   logline("---- Initialize ----");
 
   shell_configure();
 
   ultrasonic_configure(&sonic, DEVICE_TYPE_ULTRASONIC+0, 1,2);
-  hydrometric_configure(&hydoro,DEVICE_TYPE_HYDROMETRIC+0,20);
+  hydrometric_configure(&hydro,DEVICE_TYPE_HYDROMETRIC+0,20);
 
   //Front Left
   motor_configure(&(motors[0]), DEVICE_TYPE_MOTOR+0, 0, MOTOR_POSITION_L ,0, 7, 6);
