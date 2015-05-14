@@ -1,0 +1,33 @@
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+---								Arduino Robot								---
+---				Hobby project for fun by Yoann Katchourine					---
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+Works on a sensors for my Arduinos.
+
+The final goal is to make an autonomous pet for my home.
+the first work is to pilot and use sensors, then it will be to integrate the 
+whole thing.
+
+Please, don't mind asking me questions about details.
+I've voluntary but the references of sensors in the header files in order to
+help to build drivers for those sensors.
+
+I've start to use "test" project, but, for now, there not still used.
+
+Each sensor is fully independant and could me use many times.
+
+I voluntary didn't use complex mechanisms in order to extend fiability.
+
+-------------------------------------------------------------------------------
+
+The "brain" of the robot will be made using a RaspberryPI modelB+ which will
+pilot 2 Arduinos (one for mobily and pwm, and the other dedicated to sensors).
+
+More doc / picture / features / sensors / ... will come !
+
+-------------------------------------------------------------------------------
+
+Yoann Katchourine
