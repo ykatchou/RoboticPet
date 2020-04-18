@@ -13,7 +13,7 @@
 const uint DEVICE_TYPE_MOTOR = 0x0010;
 const uint DEVICE_TYPE_ULTRASONIC = 0x0020;
 const uint DEVICE_TYPE_HYDROMETRIC = 0x0030;
-
+const uint DEVICE_TYPE_DISPLAY_DOUBLELED = 0x1010;
 
 /***************************************************
  * Structures

@@ -141,6 +141,7 @@ void motor_moveMany(Motor motorArray[], int motorArrayLength, ulong idelayms, in
 /**
  * idelayms : nombre de MILLI secondes dans un sens
  * value : si 1 : FWD, si 2 : REV
+ * If iAngle > 0, turn right else turn left.
  */
 void motor_rotateMany(Motor motorArray[],int motorLenghtTotal, int iAngle)
 {

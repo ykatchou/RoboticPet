@@ -47,10 +47,6 @@ char* shell_readline(){
 void shell_configure(){
 }
 
-void shell_launch(){
-
-}
-
 #endif
 
 
