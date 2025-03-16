@@ -7,8 +7,7 @@
 
 #include "ultrasonic.h"
 #include "hydrometric.h"
-#include "soundsensor.h"
-//#include "display_double8bitled.h"
+#include "laser.h"
 
 /****************************************************************/
 /* MAIN */
@@ -16,9 +15,11 @@
 
 Device devices[10];
 
-//Hydrometric hydro;
-//Ultrasonic sonic;
 Motor motors[4];
+//Hydrometric hydro;
+Ultrasonic sonic;
+Laser laser;
+
 //Double8bitled displayled;
 
 void setup() {
@@ -27,8 +28,8 @@ void setup() {
 
   shell_configure();
 
-//  ultrasonic_configure(&sonic, DEVICE_TYPE_ULTRASONIC+0, 1,2);
-//  hydrometric_configure(&hydro,DEVICE_TYPE_HYDROMETRIC+0,20);
+ultrasonic_configure(&sonic, DEVICE_TYPE_ULTRASONIC+0, 1,2);
+laser_configure(&laser,DEVICE_TYPE_LASER+0,20);
 
  //Front Left
  motor_configure(&(motors[0]), DEVICE_TYPE_MOTOR+0, 0, MOTOR_POSITION_L ,0, 7, 6);
@@ -39,13 +40,12 @@ void setup() {
  //Back Right
  motor_configure(&(motors[3]), DEVICE_TYPE_MOTOR+3,  0, MOTOR_POSITION_R, 0, 5, 4);
 
- //device_configure(&(devices[0]), DEVICE_TYPE_ULTRASONIC,0, &sonic, "ultrason");
- //device_configure(&(devices[1]), DEVICE_TYPE_HYDROMETRIC,0, &hydro, "hydrométrie et température");
+ device_configure(&(devices[0]), DEVICE_TYPE_ULTRASONIC,0, &sonic, "ultrason");
+ device_configure(&(devices[1]), DEVICE_TYPE_LASER,0, &laser, "laser");
  device_configure(&(devices[2]), DEVICE_TYPE_MOTOR,1, &(motors[0]), "moteur avant-gauche");
  device_configure(&(devices[3]), DEVICE_TYPE_MOTOR,2, &(motors[1]), "moteur avant-droite");
  device_configure(&(devices[4]), DEVICE_TYPE_MOTOR,3, &(motors[2]), "moteur arrière-gauche");
  device_configure(&(devices[5]), DEVICE_TYPE_MOTOR,4, &(motors[3]), "moteur arrière-droite");
- //device_configure(&(devices[0]), DEVICE_TYPE_DISPLAY_DOUBLELED, 1, &displayled, "Double led display");
 
   logline("---- Initialize OK ----");
 
@@ -54,10 +54,10 @@ void setup() {
 
 void loop() {
 
-  //shell_launch();
+  shell_launch();
   //scenario_light();
 
-  scenario();
+  //scenario();
   
   //double8bitled_test(&)
 }
@@ -66,6 +66,8 @@ void loop() {
 void shell_launch(){
 
   char c = shell_read();
+  logline("Command: %c", c);
+
   switch(c){
     case 'U':
       motor_moveMany(motors, 4, 1000, MOTOR_DIRECTION_FWD);
@@ -85,8 +87,11 @@ void shell_launch(){
       break;
   }
 
-}
+  laser_toggle(laser, laser.iIsActive == 0);
+  logline("Laser: %d", laser.iIsActive);
+  logline("Ultrasonic: %d", ultrasonic_read(&sonic));
 
+}
 
 
 void scenario_light(){
