@@ -6,7 +6,6 @@
 #include "motor.h"
 
 #include "ultrasonic.h"
-#include "hydrometric.h"
 #include "laser.h"
 
 /****************************************************************/
@@ -87,9 +86,9 @@ void shell_launch(){
       break;
   }
 
-  laser_toggle(laser, laser.iIsActive == 0);
+  laser_toggle(&laser, laser.iIsActive == 0);
   logline("Laser: %d", laser.iIsActive);
-  logline("Ultrasonic: %d", ultrasonic_read(&sonic));
+  logline("Ultrasonic: %d", ultrasonic_measure(&sonic));
 
 }
 

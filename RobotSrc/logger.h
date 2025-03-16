@@ -30,5 +30,22 @@ void logline(char* str){
   }
 }
 
+/** 
+ * Fonction permettant de logger une chaîne de caractère formatée avec retour chariot.
+ */
+void logline(char* str, char* value){
+  if(DEBUG_ON){
+    Serial.print(str);
+    Serial.println(value);
+  }
+}
+
+void logline(char* str, int value){
+  if(DEBUG_ON){
+    Serial.print(str);
+    Serial.println(value);
+  }
+}
+
 #endif
 

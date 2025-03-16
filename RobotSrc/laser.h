@@ -24,7 +24,7 @@ Laser;
 /***************************************************
  * Fonctions
  ****************************************************/
-void laser_configure(Laser* laser, int pintrigger){
+void laser_configure(Laser* laser, int id, int pintrigger){
   laser->Id = id;
   laser->iPinTrigger = pintrigger;
   pinMode(laser->iPinTrigger, OUTPUT);
