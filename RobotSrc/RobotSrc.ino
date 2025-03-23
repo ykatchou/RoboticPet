@@ -14,20 +14,18 @@
 
 Device devices[10];
 Motor motors[4];
-// Hydrometric hydro;
 Ultrasonic sonic;
 Laser laser;
 
-int timer = 0;
+long last_ite_timestamp = 0;
+long last_switch = 0;
 
-// Double8bitled displayled;
-
-void setup()
-{
+void setup() {
   log_init();
   logline("---- Initialize ----");
+  last_ite_timestamp = millis();
 
-  shell_configure();
+  // shell_configure();
 
   ultrasonic_configure(&sonic, DEVICE_TYPE_ULTRASONIC + 0, 11, 12);
   laser_configure(&laser, DEVICE_TYPE_LASER + 0, 13);
@@ -48,89 +46,69 @@ void setup()
   device_configure(&(devices[4]), DEVICE_TYPE_MOTOR, 3, &(motors[2]), "moteur arrière-gauche");
   device_configure(&(devices[5]), DEVICE_TYPE_MOTOR, 4, &(motors[3]), "moteur arrière-droite");
 
-  timer = 0;
   logline("---- Initialize OK ----");
 
-  delay(3000);
+  delay(10000);
 }
 
-void loop()
-{
+void loop() {
+  long current_timestamp = millis();
+  long duration = current_timestamp - last_ite_timestamp;
+  last_ite_timestamp = last_ite_timestamp;
 
-  // shell_launch();
-  //scenario_light();
-  scenario();
-  // double8bitled_test(&)
 
-  timer++;
-  if (timer > 100000)
-  {
-    timer = 0;
-  }
-}
-
-void shell_launch()
-{
-
-  char c = shell_read();
-  // logline("Command: %c", c);
-
-  switch (c)
-  {
-  case 'U':
-    motor_moveMany(motors, 4, 1000, MOTOR_DIRECTION_FWD);
-    break;
-  case 'D':
-    motor_moveMany(motors, 4, 1000, MOTOR_DIRECTION_REV);
-    break;
-  case 'L':
-    motor_rotateMany(motors, 4, -90);
-    break;
-  case 'R':
-    motor_rotateMany(motors, 4, 90);
-    break;
-  case 'S':
-  default:
-    motor_stop(motors, true);
-    break;
+  float last_mesured_distance = ultrasonic_measure(&sonic);
+  if (last_mesured_distance < 30) {
+    motor_rotateMany(motors, 4, -60);
+  } else {
+    motor_moveMany(motors, 4, 100, MOTOR_DIRECTION_FWD);
   }
 
-  if (timer % 1000000 == 0)
-  {
-    logline("Timer: ", timer);
+  if (last_switch + 1000 < current_timestamp) {
+    last_switch = current_timestamp;
     laser_toggle(&laser, laser.iIsActive == 0);
+
+    logline("Timer: ", current_timestamp);
     logline("Laser: ", laser.iIsActive);
-    logline("Ultrasonic: ", ultrasonic_measure(&sonic));
+    logline("Ultrasonic: ", last_mesured_distance);
+  }
+
+  //Force 100ms per loop
+  const long LOOP_DURATION = 150;
+  current_timestamp = millis();
+  if (current_timestamp - last_ite_timestamp < LOOP_DURATION) {
+    delay(LOOP_DURATION - (current_timestamp - last_ite_timestamp));
   }
 }
 
-void scenario_light()
-{
-
-  for (int i = 0; i < 10; i++)
-  {
-    motor_moveMany(motors, 4, 200, MOTOR_DIRECTION_FWD);
-  }
-
-  delay(1000);
-}
-
-void scenario()
-{
-    if (ultrasonic_measure(&sonic) < 10)
-    {
-      motor_rotateMany(motors, 4, -60);
-    }
-    else
-    {
-      laser_toggle(&laser, 1);
-      motor_moveMany(motors, 4, 500, MOTOR_DIRECTION_FWD);
-      laser_toggle(&laser, 0);
-    }
-
-    if (timer % 1000000 == 0)
-    {
-      laser_toggle(&laser, laser.iIsActive == 0);
-      delay(1000);
-    }
-}
+// void shell_launch()
+// {
+//   char c = shell_read();
+//   // logline("Command: %c", c);
+//   switch (c)
+//   {
+//   case 'U':
+//     motor_moveMany(motors, 4, 1000, MOTOR_DIRECTION_FWD);
+//     break;
+//   case 'D':
+//     motor_moveMany(motors, 4, 1000, MOTOR_DIRECTION_REV);
+//     break;
+//   case 'L':
+//     motor_rotateMany(motors, 4, -90);
+//     break;
+//   case 'R':
+//     motor_rotateMany(motors, 4, 90);
+//     break;
+//   case 'S':
+//   default:
+//     motor_stop(motors, true);
+//     break;
+//   }
+//   if (timer % 1000000 == 0)
+//   {
+//     logline("Timer: ", timer);
+//     laser_toggle(&laser, laser.iIsActive == 0);
+//     logline("Laser: ", laser.iIsActive);
+//     logline("Ultrasonic: ", ultrasonic_measure(&sonic));
+//   }
+// }

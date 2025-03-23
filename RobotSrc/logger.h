@@ -47,6 +47,13 @@ void logline(char* str, int value){
   }
 }
 
+void logline(char* str, long value){
+  if(DEBUG_ON){
+    Serial.print(str);
+    Serial.println(value);
+  }
+}
+
 void logline(char* str, float value){
   if(DEBUG_ON){
     Serial.print(str);
